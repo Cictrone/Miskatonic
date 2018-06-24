@@ -7,7 +7,6 @@ from mongoengine.fields import DateTimeField, BooleanField
 
 
 class Device(Document):
-    owner = ReferenceField(User)
     private_key = StringField(required=True)
     token_counter = IntField(default=1)
     token_generated = BooleanField(default=False)
@@ -15,6 +14,7 @@ class Device(Document):
     creation_time = DateTimeField()
     last_checkin = DateTimeField()
     device_data = StringField(default='\{\}')  # JSON blob of device data
+    auth_requested = BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.creation_time:
@@ -35,9 +35,13 @@ class Device(Document):
         self.token_generated = False
         self.save()
 
-    def is_valid_token(input_token: string) -> bool:
-        return
+    def set_auth_requested() -> None:
+        self.auth_requested = True
+        self.save()
 
-    def checkin(self) -> None:
+    def is_valid_token(input_token: string) -> bool:
+        return input_token == self.token
+
+    def check_in(self) -> None:
         self.last_checkin = datetime.datetime.now()
         self.save()
