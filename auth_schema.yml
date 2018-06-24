@@ -1,0 +1,8 @@
+auth_servers:
+    master:
+        host: localhost
+        port: 5000
+app_servers:
+    my_app:
+        host: localhost
+        port: 443
