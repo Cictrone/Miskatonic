@@ -36,6 +36,52 @@ def request_2fac():
     return resp
 
 
+@Routes.route('/server_poll', methods=['POST'])
+def server_poll():
+    success = True
+    status_code = 200
+    try:
+        json_req = request.get_json()
+        if json_req is None:
+            raise ValueError(
+                'The JSON body could not be decoded ensure the Content-Type Header is set.'
+            )
+        device_id = json_req['device_id']
+        device = Device.get_device(device_id)
+        auth_requested = device.auth_requested
+    except:
+        success = False
+        status_code = 500
+        auth_requested = None
+    resp = jsonify({'success': success, 'auth_requested': auth_requested})
+    resp.status_code = status_code
+    return resp
+
+
+@Routes.route('/auth_proof', methods=['POST'])
+def auth_proof():
+    success = True
+    status_code = 200
+    try:
+        json_req = request.get_json()
+        if json_req is None:
+            raise ValueError(
+                'The JSON body could not be decoded ensure the Content-Type Header is set.'
+            )
+        device_id = json_req['device_id']
+        encrypted_token = json_req['encrypted_token']
+        device = Device.get_device(device_id)
+        is_valid_token = device.is_valid_token(encrypted_token)
+    except:
+        success = False
+        status_code = 500
+        is_valid_token = None
+    # TODO: semantic security on response?
+    resp = jsonify({'success': success, 'is_valid_token': is_valid_token})
+    resp.status_code = status_code
+    return resp
+
+
 def create_app() -> Flask:
     configs = [DB_NAME, DB_HOST, DB_PORT, DB_USER, DB_PASS]
     if not any(configs):

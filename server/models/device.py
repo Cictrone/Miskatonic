@@ -8,6 +8,7 @@ from mongoengine.fields import DateTimeField, BooleanField
 
 class Device(Document):
     private_key = StringField(required=True)
+    public_cert = StringField(required=True)
     token_counter = IntField(default=1)
     token_generated = BooleanField(default=False)
     _token_value = StringField(default=None)
@@ -20,6 +21,10 @@ class Device(Document):
         if not self.creation_time:
             self.creation_date = datetime.datetime.now()
         return super(Device, self).save(*args, **kwargs)
+
+    @staticmethod
+    def get_device(device) -> Device:
+        return Device.objects.get(id=device)
 
     @property
     def token(self) -> str:
@@ -39,8 +44,22 @@ class Device(Document):
         self.auth_requested = True
         self.save()
 
-    def is_valid_token(input_token: string) -> bool:
-        return input_token == self.token
+    def unset_auth_requested() -> None:
+        self.auth_requested = False
+        self.save()
+
+    def decrypt(encrypted_blob: string) -> string:
+        # no crypto for now :(
+        return encrypted_blob
+
+    def is_valid_token(encrypted_token: string) -> bool:
+        token = self.decrypt(encrypted_token)
+        valid = token == self.token
+        if valid:
+            self.increment_token_counter()
+            self.check_in()
+            self.unset_auth_requested()
+        return valid
 
     def check_in(self) -> None:
         self.last_checkin = datetime.datetime.now()
